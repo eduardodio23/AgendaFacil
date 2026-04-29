@@ -1,0 +1,44 @@
+/* ===== FOOTER - Tema Barbearia ===== */
+footer {
+  background-color: #0a0a0a;
+  border-top: 1px solid #222;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.footer-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.footer-logo .logo-icon {
+  font-size: 20px;
+  color: #d4af37;
+}
+
+.footer-logo span {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  color: #d4af37;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.footer-info {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.footer-copy {
+  color: #444;
+  font-size: 12px;
+}

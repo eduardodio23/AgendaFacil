@@ -1,14 +1,19 @@
-import '/.style.css'; 
+import './style.css'; 
 
-export function Footer() {
+export default function Footer() {
     return(
         <footer>
-            <div>
-                <strong>Barbearia de Ramon</strong> CNPJ 00.000.000/0000-00
-                <br />
-                Rua Travessa do Riberio 84, Cidade Baixa, Salvador - BA
-                <br />
-                © {new Date().getFullYear()} Barbearia de Ramon. Todos os direitos reservados.
+            <div className="footer-content">
+                <div className="footer-logo">
+                    <span className="logo-icon">✂</span>
+                    <span>Barbearia Ramon</span>
+                </div>
+                <p className="footer-info">
+                    CNPJ 00.000.000/0000-00 • Rua Travessa do Riberio 84, Cidade Baixa, Salvador - BA
+                </p>
+                <p className="footer-copy">
+                    © {new Date().getFullYear()} Barbearia Ramon. Todos os direitos reservados.
+                </p>
             </div>
         </footer>
     )

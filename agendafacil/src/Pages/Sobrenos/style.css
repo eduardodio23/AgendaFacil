@@ -1,0 +1,73 @@
+/* ===== SOBRE NÓS - Tema Barbearia ===== */
+.Sobre-Nos {
+  min-height: calc(100vh - 120px);
+  background-color: #0a0a0a;
+  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+}
+
+.Sobre-Nos h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 42px;
+  color: #d4af37;
+  margin-bottom: 30px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.Sobre-Nos p {
+  font-size: 20px;
+  color: #ccc;
+  margin-bottom: 40px;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.Sobre-Nos ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.Sobre-Nos li {
+  background: #111111;
+  border: 1px solid #222;
+  border-radius: 6px;
+  padding: 20px 40px;
+  color: #fff;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+.Sobre-Nos li:hover {
+  border-color: #d4af37;
+  background-color: rgba(212, 175, 55, 0.1);
+}
+
+.Sobre-Nos li::before {
+  content: '✂';
+  margin-right: 15px;
+  color: #d4af37;
+}
+
+@media (max-width: 600px) {
+  .Sobre-Nos h1 {
+    font-size: 28px;
+  }
+  
+  .Sobre-Nos p {
+    font-size: 16px;
+  }
+  
+  .Sobre-Nos li {
+    padding: 15px 20px;
+  }
+}

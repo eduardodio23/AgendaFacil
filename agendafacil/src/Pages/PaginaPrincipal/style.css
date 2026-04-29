@@ -1,0 +1,135 @@
+/* ===== PÁGINA PRINCIPAL - Tema Barbearia ===== */
+.PaginaPrincipal {
+  min-height: calc(100vh - 120px);
+  background-color: #0a0a0a;
+  color: #fff;
+}
+
+/* Hero Section */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 20px;
+  background: linear-gradient(180deg, #0a0a0a 0%, #151515 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 30% 70%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 70% 30%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 48px;
+  color: #d4af37;
+  margin-bottom: 20px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.hero p {
+  font-size: 18px;
+  color: #888;
+  margin-bottom: 40px;
+  max-width: 500px;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 16px 40px;
+  background: linear-gradient(135deg, #d4af37 0%, #b8962e 100%);
+  color: #0a0a0a;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.cta-button:hover {
+  background: linear-gradient(135deg, #e5c048 0%, #d4af37 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
+}
+
+/* Featured Section */
+.featured {
+  padding: 60px 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.featured h2 {
+  text-align: center;
+  font-size: 24px;
+  color: #d4af37;
+  margin-bottom: 40px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.products-grid {
+  display: flex;
+  justify-content: center;
+}
+
+.products-card {
+  background: #111111;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 30px 50px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.products-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.products-card li {
+  padding: 12px 0;
+  border-bottom: 1px solid #222;
+  color: #ccc;
+  font-size: 16px;
+}
+
+.products-card li:last-child {
+  border-bottom: none;
+}
+
+.products-card li strong {
+  color: #d4af37;
+  margin-right: 10px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .hero h1 {
+    font-size: 32px;
+  }
+  
+  .hero p {
+    font-size: 16px;
+  }
+  
+  .products-card {
+    padding: 25px 30px;
+  }
+}
