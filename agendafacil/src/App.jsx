@@ -14,12 +14,13 @@ function App() {
      <Header />
      <main>
       <Routes>
-        <Route path="/" element={<PaginaPrincipal />} />
+        <Route path="/" element={<Cadastro />} />
+        <Route path="/paginaprincipal" element={<PaginaPrincipal />} />
         <Route path="/agendamentos" element={<Agendamentos />} />
-        <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/sobrenos" element={<Sobrenos />} />
       </Routes>
      </main>
+     <Footer/>
     </Router>
   )
 }

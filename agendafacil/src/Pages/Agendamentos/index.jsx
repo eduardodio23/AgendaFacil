@@ -1,21 +1,20 @@
 import { useState } from 'react';
 import './style.css';
 
-// Dados de exemplo - futuramente virão do banco de dados
+
 const servicosDisponiveis = [
-  { id: 1, nome: 'Corte Masculino', duracao: 30, preco: 35 },
-  { id: 2, nome: 'Corte + Barba', duracao: 60, preco: 55 },
-  { id: 3, nome: 'Barba Modelada', duracao: 30, preco: 25 },
+  { id: 1, nome: 'Corte Masculino', duracao: 30, preco: 25 },
+  { id: 2, nome: 'Corte + Barba', duracao: 60, preco: 30 },
+  { id: 3, nome: 'Barba Modelada', duracao: 30, preco: 20 },
   { id: 4, nome: 'Sobrancelha', duracao: 15, preco: 15 },
   { id: 5, nome: 'Luzes / Coloração', duracao: 90, preco: 80 },
-  { id: 6, nome: 'Relaxamento', duracao: 45, preco: 45 },
 ];
 
 const profissionaisDisponiveis = [
   { id: 1, nome: 'Ramon (Proprietário)' },
 ];
 
-// Horários disponíveis
+
 const horariosDisponiveis = [
   '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
   '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',

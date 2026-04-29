@@ -8,11 +8,11 @@ export default function PaginaPrincipal(){
             <section className="hero">
                 <h1>Bem-vindo a Barbearia Ramon</h1>
                 <p>Faça o seu agendamento e não seja supreendido por filas!</p>
-                <Link to="/agendamentos" className="cta-button">Realizar Agendamentos</Link>
+                <Link to="/agendamentos" className="cta-button">Realizar Agendamento</Link>
                 
             </section>
             <section className="featured">
-                <h2>Horarios de Funcionamento</h2>
+                <h2>Horários de Funcionamento</h2>
                 <div className="products-grid">
                     <div className="products-card">
                         <ul>
