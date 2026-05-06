@@ -13,7 +13,6 @@ export default function Header() {
                     <li><NavLink to="/">Início</NavLink></li>
                     <li><NavLink to="/agendamentos">Agendamentos</NavLink></li>
                     <li><NavLink to="/sobrenos">Sobre Nós</NavLink></li>
-                    <li><NavLink to="/cadastro">Cadastro</NavLink></li>
                 </ul>
             </nav>
         </header>

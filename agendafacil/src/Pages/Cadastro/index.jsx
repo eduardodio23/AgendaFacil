@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './style.css';
+import { Link } from 'react-router-dom';
 
 export default function Cadastro() {
   const [formData, setFormData] = useState({
@@ -152,7 +153,7 @@ export default function Cadastro() {
           </button>
 
           <p className="form-footer">
-            Já tem conta? <a href="/login">Fazer login</a>
+            Já tem conta? <Link to="/login">Fazer login</Link>
           </p>
         </form>
       </div>
