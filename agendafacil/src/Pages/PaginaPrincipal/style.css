@@ -119,6 +119,83 @@
   margin-right: 10px;
 }
 
+.quick-access {
+  padding: 0 20px 60px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.quick-access-card {
+  background: #111111;
+  border: 1px solid #222;
+  border-radius: 16px;
+  padding: 28px;
+  margin-top: 40px;
+}
+
+.quick-access-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.quick-access-header h3 {
+  color: #d4af37;
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.quick-access-header p {
+  color: #ccc;
+  margin: 0;
+}
+
+.small-link {
+  color: #d4af37;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.quick-list {
+  display: grid;
+  gap: 14px;
+}
+
+.quick-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0f0f0f;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.quick-item strong,
+.quick-item span,
+.quick-item p {
+  color: #ddd;
+}
+
+.quick-item span {
+  display: inline-block;
+  margin-left: 12px;
+  color: #d4af37;
+}
+
+.quick-item p {
+  margin: 0;
+  color: #888;
+}
+
+.quick-loading,
+.quick-error,
+.quick-empty {
+  color: #ccc;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .hero h1 {

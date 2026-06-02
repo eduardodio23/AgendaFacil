@@ -1,6 +1,21 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import './style.css';
-import { Link } from 'react-router-dom';
+
+function formatPhone(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  return digits
+    .replace(/^(\d{2})(\d)/, '($1) $2')
+    .replace(/(\d{5})(\d)/, '$1-$2');
+}
+
+function formatCPF(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  return digits
+    .replace(/^(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+}
 
 export default function Cadastro() {
   const [formData, setFormData] = useState({
@@ -12,36 +27,65 @@ export default function Cadastro() {
     senha: '',
     confirmarSenha: ''
   });
+  const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    let newValue = value;
+
+    if (name === 'telefone') {
+      newValue = formatPhone(value);
+    }
+
+    if (name === 'cpf') {
+      newValue = formatCPF(value);
+    }
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: newValue
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validação básica
+    setError('');
+
     if (formData.senha !== formData.confirmarSenha) {
-      alert('As senhas não coincidem!');
+      setError('As senhas não coincidem.');
       return;
     }
 
-    // TODO: Enviar dados para o banco de dados
-    // Estrutura pronta para conexão futura com API
-    const dadosParaBanco = {
-      nome: formData.nome,
-      email: formData.email,
-      telefone: formData.telefone,
-      cpf: formData.cpf,
-      data_nascimento: formData.dataNascimento,
-    };
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:3000/usuarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: formData.nome,
+          email: formData.email,
+          telefone: formData.telefone,
+          cpf: formData.cpf,
+          data_nascimento: formData.dataNascimento,
+          senha: formData.senha
+        })
+      });
 
-    console.log('Dados prontos para envio ao banco:', dadosParaBanco);
-    alert('Cadastro realizado com sucesso! (Pronto para integração com banco)');
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || 'Erro ao cadastrar usuário.');
+        return;
+      }
+
+      setShowModal(true);
+    } catch (err) {
+      setError('Erro de conexão com a API.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -148,8 +192,9 @@ export default function Cadastro() {
             </div>
           </div>
 
-          <button type="submit" className="btn-submit">
-            Cadastrar
+          {error && <p className="error-message">{error}</p>}
+          <button type="submit" className="btn-submit" disabled={loading}>
+            {loading ? 'Cadastrando...' : 'Cadastrar'}
           </button>
 
           <p className="form-footer">
@@ -157,6 +202,18 @@ export default function Cadastro() {
           </p>
         </form>
       </div>
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Cadastro concluído</h3>
+            <p>Seu usuário foi criado com sucesso. Agora você pode entrar na sua conta.</p>
+            <button type="button" className="btn-submit" onClick={() => navigate('/login')}>
+              Ir para Login
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

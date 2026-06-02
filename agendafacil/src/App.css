@@ -34,15 +34,44 @@ button {
 ul {
   list-style: none;
 }
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
 
-
-.card {
-  padding: 2em;
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 
-.read-the-docs {
-  color: #888;
+.modal-content {
+  width: min(100%, 420px);
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 18px;
+  padding: 32px;
+  text-align: center;
 }
+
+.modal-content h3 {
+  color: #d4af37;
+  margin-bottom: 16px;
+}
+
+.modal-content p {
+  color: #ccc;
+  margin-bottom: 24px;
+}
+
+.modal-content .btn-submit {
+  width: 100%;
+}
+
+.error-message {
+  color: #ff7b7b;
+  font-size: 14px;
+  margin-top: -10px;
+  margin-bottom: 12px;
+}
+

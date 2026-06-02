@@ -1,30 +1,67 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Header from './Components/Header'
-import Footer from './Components/Footer'
-import PaginaPrincipal from './Pages/PaginaPrincipal'
-import Agendamentos from './Pages/Agendamentos'
-import Cadastro from './Pages/Cadastro'
-import Sobrenos from './Pages/Sobrenos'
-import Login from './Pages/Login'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Header from './Components/Header';
+import Footer from './Components/Footer';
+import PaginaPrincipal from './Pages/PaginaPrincipal';
+import Agendamentos from './Pages/Agendamentos';
+import MeusAgendamentos from './Pages/MeusAgendamentos';
+import Cadastro from './Pages/Cadastro';
+import Sobrenos from './Pages/Sobrenos';
+import Login from './Pages/Login';
+import Barbeiro from './Pages/Barbeiro';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './ProtectedRoute';
+import './App.css';
 
 function App() {
   return (
     <Router>
-      <Header />
-      <main>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/paginaprincipal" element={<PaginaPrincipal />} />
-          <Route path="/cadastro" element={<Cadastro />} />
-          <Route path="/agendamentos" element={<Agendamentos />} />
-          <Route path="/sobrenos" element={<Sobrenos />} />
-        </Routes>
-      </main>
-      <Footer />
+      <AuthProvider>
+        <Header />
+        <main>
+          <Routes>
+            <Route path="/" element={<Navigate replace to="/login" />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/cadastro" element={<Cadastro />} />
+            <Route
+              path="/paginaprincipal"
+              element={
+                <ProtectedRoute>
+                  <PaginaPrincipal />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/agendamentos"
+              element={
+                <ProtectedRoute>
+                  <Agendamentos />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/meus-agendamentos"
+              element={
+                <ProtectedRoute>
+                  <MeusAgendamentos />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/barbeiro"
+              element={
+                <ProtectedRoute allowedRoles={['barbeiro']}>
+                  <Barbeiro />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/sobrenos" element={<Sobrenos />} />
+            <Route path="*" element={<Navigate replace to="/login" />} />
+          </Routes>
+        </main>
+        <Footer />
+      </AuthProvider>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;

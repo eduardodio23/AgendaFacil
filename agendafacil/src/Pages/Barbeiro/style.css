@@ -1,0 +1,220 @@
+.barbeiro-dashboard {
+  min-height: calc(100vh - 120px);
+  padding: 40px 20px;
+  background-color: #090909;
+}
+
+.barbeiro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #111;
+  border: 1px solid #222;
+  padding: 30px;
+  border-radius: 14px;
+  margin-bottom: 30px;
+}
+
+.barbeiro-header h1 {
+  color: #d4af37;
+  margin-bottom: 8px;
+}
+
+.barbeiro-header p {
+  color: #ccc;
+  max-width: 640px;
+}
+
+.barbeiro-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 30px;
+}
+
+.barbeiro-summary div {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 14px;
+  padding: 24px;
+  color: #fff;
+}
+
+.barbeiro-summary strong {
+  display: block;
+  color: #d4af37;
+  margin-bottom: 8px;
+}
+
+.barbeiro-summary span {
+  font-size: 32px;
+}
+
+.barbeiro-cards {
+  display: grid;
+  gap: 20px;
+}
+
+.barbeiro-card {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 16px;
+  padding: 24px;
+  color: #ddd;
+}
+
+.barbeiro-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.card-date,
+.card-time {
+  color: #d4af37;
+  font-weight: 700;
+}
+
+.barbeiro-card h2 {
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.barbeiro-card p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.observacoes {
+  color: #ccc;
+}
+
+.cancel-warning {
+  margin-top: 18px;
+  padding: 14px;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid #d4af37;
+  border-radius: 10px;
+  color: #ffeaa7;
+}
+
+.canceled {
+  opacity: 0.85;
+}
+
+.loading-text,
+.error-text,
+.empty-text {
+  color: #ccc;
+  font-size: 16px;
+  padding: 24px;
+}
+
+.barbeiro-tabs {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.barbeiro-tabs button {
+  background: #111;
+  border: 1px solid #333;
+  color: #ddd;
+  padding: 14px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.barbeiro-tabs button.active,
+.barbeiro-tabs button:hover {
+  background: #1f1f1f;
+  border-color: #d4af37;
+  color: #d4af37;
+}
+
+.action-message {
+  color: #d4af37;
+  margin-bottom: 18px;
+  font-size: 15px;
+}
+
+.barbeiro-finance {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.finance-card {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 16px;
+  padding: 26px;
+  color: #ddd;
+}
+
+.finance-card h3 {
+  margin-bottom: 18px;
+  color: #d4af37;
+}
+
+.barbeiro-actions {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.barbeiro-actions button,
+.faturar-button {
+  border: none;
+  cursor: pointer;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.cancel-button {
+  background: #b33030;
+  color: #fff;
+}
+
+.faturar-button {
+  background: #d4af37;
+  color: #0a0a0a;
+}
+
+.billing-box {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid #222;
+  padding-top: 18px;
+}
+
+.billing-box label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #ccc;
+  font-size: 14px;
+}
+
+.billing-box input,
+.billing-box select {
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #0f0f0f;
+  color: #fff;
+}
+
+@media (max-width: 800px) {
+  .barbeiro-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .barbeiro-finance {
+    grid-template-columns: 1fr;
+  }
+}

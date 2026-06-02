@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './style.css';
-
+import { useAuth } from '../../contexts/AuthContext';
 
 const servicosDisponiveis = [
   { id: 1, nome: 'Corte Masculino', duracao: 30, preco: 25 },
@@ -14,8 +14,7 @@ const profissionaisDisponiveis = [
   { id: 1, nome: 'Ramon (Proprietário)' },
 ];
 
-
-const horariosDisponiveis = [
+const horariosDiaUtil = [
   '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
   '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
   '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
@@ -23,7 +22,35 @@ const horariosDisponiveis = [
   '20:00', '20:30', '21:00', '21:30', '22:00', '22:30',
 ];
 
+const horariosSabado = [
+  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+  '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+  '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+  '17:00', '17:30', '18:00',
+];
+
+const horariosDomingo = [
+  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+  '11:00', '11:30', '12:00', '12:30', '13:00',
+];
+
+function getHorariosDisponiveis(data) {
+  if (!data) return horariosDiaUtil;
+  const dia = new Date(data).getDay();
+  if (dia === 6) return horariosSabado;
+  if (dia === 0) return horariosDomingo;
+  return horariosDiaUtil;
+}
+
+function formatPhone(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  return digits
+    .replace(/^(\d{2})(\d)/, '($1) $2')
+    .replace(/(\d{5})(\d)/, '$1-$2');
+}
+
 export default function Agendamentos() {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     servico: '',
     profissional: '',
@@ -33,47 +60,97 @@ export default function Agendamentos() {
     telefone: '',
     observacoes: ''
   });
-
   const [servicoSelecionado, setServicoSelecionado] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        nomeCliente: user.nome || prev.nomeCliente,
+        telefone: user.telefone || prev.telefone
+      }));
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
 
-    // Atualiza o serviço selecionado para mostrar duração e preço
+    const formattedValue = name === 'telefone' ? formatPhone(value) : value;
+
+    setFormData((prev) => {
+      const updatedForm = {
+        ...prev,
+        [name]: formattedValue
+      };
+
+      if (name === 'data') {
+        const horariosParaData = getHorariosDisponiveis(formattedValue);
+        if (!horariosParaData.includes(prev.horario)) {
+          updatedForm.horario = '';
+        }
+      }
+
+      return updatedForm;
+    });
+
     if (name === 'servico') {
-      const servico = servicosDisponiveis.find(s => s.id === parseInt(value));
+      const servico = servicosDisponiveis.find((s) => s.id === parseInt(value, 10));
       setServicoSelecionado(servico || null);
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
-    // Validação básica
-    if (!formData.servico || !formData.profissional || !formData.data || !formData.horario) {
-      alert('Por favor, preencha todos os campos obrigatórios!');
+    if (!formData.servico || !formData.profissional || !formData.data || !formData.horario || !formData.telefone) {
+      setError('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
-    // TODO: Enviar dados para o banco de dados
-    const agendamento = {
-      servico_id: parseInt(formData.servico),
-      profissional_id: parseInt(formData.profissional),
-      data: formData.data,
-      horario: formData.horario,
-      cliente: {
-        nome: formData.nomeCliente,
-        telefone: formData.telefone
-      },
-      observacoes: formData.observacoes,
-    };
+    setLoading(true);
 
-    console.log('Agendamento pronto para envio ao banco:', agendamento);
-    alert('Agendamento realizado com sucesso! (Pronto para integração com banco)');
+    try {
+      const selectedService = servicosDisponiveis.find((s) => s.id === parseInt(formData.servico, 10));
+      const response = await fetch('http://localhost:3000/agendamentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuarioId: user.id,
+          servico: selectedService?.nome,
+          profissional: profissionaisDisponiveis.find((p) => p.id === parseInt(formData.profissional, 10))?.nome,
+          data: formData.data,
+          horario: formData.horario,
+          telefone: formData.telefone,
+          valor: selectedService?.preco || 0,
+          observacoes: formData.observacoes
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || 'Erro ao enviar agendamento.');
+        return;
+      }
+
+      setShowModal(true);
+      setFormData((prev) => ({
+        ...prev,
+        servico: '',
+        profissional: '',
+        data: '',
+        horario: '',
+        observacoes: ''
+      }));
+      setServicoSelecionado(null);
+    } catch (err) {
+      setError('Erro de conexão com a API.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -83,13 +160,12 @@ export default function Agendamentos() {
         <p className="agendamentos-subtitle">Escolha o serviço, profissional e horário</p>
 
         <form onSubmit={handleSubmit} className="agendamentos-form">
-          {/* Seção: Serviço */}
           <div className="form-section">
             <h2>Selecione o Serviço *</h2>
             <div className="servicos-grid">
-              {servicosDisponiveis.map(servico => (
-                <label 
-                  key={servico.id} 
+              {servicosDisponiveis.map((servico) => (
+                <label
+                  key={servico.id}
                   className={`servico-card ${formData.servico === String(servico.id) ? 'selected' : ''}`}
                 >
                   <input
@@ -111,13 +187,12 @@ export default function Agendamentos() {
             </div>
           </div>
 
-          {/* Seção: Profissional */}
           <div className="form-section">
             <h2>Selecione o Profissional *</h2>
             <div className="profissionais-grid">
-              {profissionaisDisponiveis.map(prof => (
-                <label 
-                  key={prof.id} 
+              {profissionaisDisponiveis.map((prof) => (
+                <label
+                  key={prof.id}
                   className={`profissional-card ${formData.profissional === String(prof.id) ? 'selected' : ''}`}
                 >
                   <input
@@ -134,7 +209,6 @@ export default function Agendamentos() {
             </div>
           </div>
 
-          {/* Seção: Data e Horário */}
           <div className="form-section">
             <h2>Data e Horário *</h2>
             <div className="form-row">
@@ -161,7 +235,7 @@ export default function Agendamentos() {
                   required
                 >
                   <option value="">Selecione um horário</option>
-                  {horariosDisponiveis.map(horario => (
+                  {getHorariosDisponiveis(formData.data).map((horario) => (
                     <option key={horario} value={horario}>{horario}</option>
                   ))}
                 </select>
@@ -169,7 +243,6 @@ export default function Agendamentos() {
             </div>
           </div>
 
-          {/* Seção: Dados do Cliente */}
           <div className="form-section">
             <h2>Seus Dados</h2>
             <div className="form-row">
@@ -194,6 +267,7 @@ export default function Agendamentos() {
                   value={formData.telefone}
                   onChange={handleChange}
                   placeholder="(00) 00000-0000"
+                  required
                 />
               </div>
             </div>
@@ -211,7 +285,6 @@ export default function Agendamentos() {
             </div>
           </div>
 
-          {/* Resumo do Agendamento */}
           {servicoSelecionado && formData.data && formData.horario && (
             <div className="agendamento-resumo">
               <h3>Resumo do Agendamento</h3>
@@ -223,11 +296,24 @@ export default function Agendamentos() {
             </div>
           )}
 
-          <button type="submit" className="btn-submit">
-            Confirmar Agendamento
+          {error && <p className="error-message">{error}</p>}
+          <button type="submit" className="btn-submit" disabled={loading}>
+            {loading ? 'Enviando...' : 'Confirmar Agendamento'}
           </button>
         </form>
       </div>
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Agendamento concluído</h3>
+            <p>Seu agendamento foi enviado com sucesso. Veja o barbeiro na agenda da semana.</p>
+            <button type="button" className="btn-submit" onClick={() => setShowModal(false)}>
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
