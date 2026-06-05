@@ -2,6 +2,8 @@
 
 Sistema de agendamento online para barbearias com React (frontend) e Node.js (backend).
 
+OBS: Este projeto está atualmente hospedado em produção no Vercel (frontend). O backend está hospedado como serviço gerenciado na Aiven (aiven.io). Para desenvolvimento local, siga as instruções abaixo.
+
 ## ⚡ Quick Start (5 minutos)
 
 ### 1. Pré-requisitos
@@ -14,6 +16,8 @@ Abra o MySQL e execute:
 CREATE DATABASE agendafacil;
 USE agendafacil;
 ```
+
+Nota: Em produção o banco e a API estão hospedados na Aiven (serviço gerenciado). As credenciais e a URL da API em produção são diferentes das usadas localmente; use variáveis de ambiente para apontar para o serviço Aiven quando fizer deploy no Vercel.
 
 ### 3. Instalar dependências
 
@@ -31,6 +35,8 @@ cd agendafacilBackend
 npm install
 node index.js
 ```
+
+Em produção: o backend está implantado em Aiven (aiven.io). A aplicação frontend no Vercel consome a API pública hospedada na Aiven.
 
 ## 🧪 Contas de Teste
 
@@ -85,6 +91,8 @@ Edite `agendafacilBackend/index.js` se precisar alterar:
 - Usuário: `root`
 - Senha: `12345678`
 - Banco: `agendafacil`
+
+Produção: quando usar o backend hospedado na Aiven, atualize as variáveis de ambiente no painel do Vercel para apontar a `BACKEND_URL` (ex.: `https://sua-api-aiven.example`) e as credenciais do banco fornecidas pela Aiven. Não versionar credenciais em código.
 
 ### Reset do Banco (se necessário)
 ```sql
