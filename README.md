@@ -35,7 +35,7 @@ node index.js
 ## 🧪 Contas de Teste
 
 ### Barbeiro (Conta Administradora)
-- **Email:** barbeiro@ramon.com
+- **Email:** barbeiro@agendafacil.com
 - **Senha:** barbeiro123
 - Acesso: Gerenciar serviços, agendamentos e painel administrativo do barbeiro
 
