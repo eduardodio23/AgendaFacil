@@ -28,97 +28,44 @@ npm install
 npm run dev
 ```
 Acesse: http://localhost:5173
+# AgendaFácil
 
-**Backend (novo terminal):**
-```bash
-cd agendafacilBackend
-npm install
-node index.js
-```
+Sistema de agendamento online para barbearias. Interface em React (Vite) e API em Node.js/Express; o banco de dados usa MySQL.
 
-Em produção: o backend está implantado em Aiven (aiven.io). A aplicação frontend no Vercel consome a API pública hospedada na Aiven.
+**Status de hospedagem:**
+- Frontend: hospedado no Vercel (deploy e CDN para a interface).
+- Backend e Banco: hospedados como serviço gerenciado na Aiven (aiven.io) — a API pública é consumida pelo frontend em produção.
 
-## 🧪 Contas de Teste
+**O que é o projeto**
+- Plataforma simples para clientes agendarem serviços de barbearia e para barbeiros gerenciarem horários e serviços.
+- Suporta autenticação de dois tipos de usuário: Cliente e Barbeiro.
 
-### Barbeiro (Conta Administradora)
-- **Email:** barbeiro@agendafacil.com
-- **Senha:** barbeiro123
-- Acesso: Gerenciar serviços, agendamentos e painel administrativo do barbeiro
+**Como funciona (fluxo resumido)**
+- Cliente: cria conta → faz login → escolhe serviço e horário → agenda → recebe confirmação.
+- Barbeiro: faz login → visualiza agenda → confirma/recusa horários, gerencia serviços e disponibilidade.
+- Frontend consome a API REST hospedada na Aiven; o backend faz persistência em MySQL gerenciado.
 
-### Cliente
-- **Email:** cliente@agendafacil.com
-- **Senha:** cliente123
-- Acesso: Agendar serviços e visualizar agendamentos
+**Arquitetura (resumo)**
+- `agendafacil/` — Frontend React + Vite, deploy no Vercel.
+- `agendafacilBackend/` — Backend Node.js/Express, deploy hospedado na Aiven; banco MySQL gerenciado pela Aiven.
+- Comunicação via HTTPS com endpoints REST. Variáveis de ambiente definem a `BACKEND_URL` usada pelo frontend em produção.
 
-## 📋 Funcionalidades
+**Contas de teste**
+- Barbeiro (administrador)
+	- Email: barbeiro@agendafacil.com
+	- Senha: barbeiro123
+- Cliente
+	- Email: cliente@agendafacil.com
+	- Senha: cliente123
 
-- ✅ Autenticação de usuários (Cliente e Barbeiro)
-- ✅ Agendamento de serviços
-- ✅ Gerenciamento de agendamentos
-- ✅ Painel do barbeiro
-- ✅ Visualização de serviços
+**Desenvolvimento local (resumo)**
+- O repositório contém dois projetos: frontend (`agendafacil/`) e backend (`agendafacilBackend/`).
+- Para testar localmente, rode ambos em paralelo ou aponte o frontend para a `BACKEND_URL` da Aiven. Ajuste as variáveis de ambiente no Vercel quando for fazer o deploy.
 
-## 📁 Estrutura
-
-```
-AgendaFacil/
-├── agendafacil/           # Frontend (React + Vite)
-└── agendafacilBackend/    # Backend (Node.js + Express)
-```
-
-## 📝 Comandos Frontend
-
-```bash
-npm run dev       # Iniciar desenvolvimento
-npm run build     # Build para produção
-npm run lint      # Verificar código
-npm run preview   # Preview da build
-```
-
-## 📝 Comandos Git
-
-```bash
-git pull                    # Trazer mudanças
-git add .                   # Adicionar arquivos
-git commit -m "mensagem"    # Criar versão
-git push                    # Enviar mudanças
-```
-
-## ⚙️ Configuração
-
-### Credenciais do Banco
-Edite `agendafacilBackend/index.js` se precisar alterar:
-- Usuário: `root`
-- Senha: `12345678`
-- Banco: `agendafacil`
-
-Produção: quando usar o backend hospedado na Aiven, atualize as variáveis de ambiente no painel do Vercel para apontar a `BACKEND_URL` (ex.: `https://sua-api-aiven.example`) e as credenciais do banco fornecidas pela Aiven. Não versionar credenciais em código.
-
-### Reset do Banco (se necessário)
-```sql
-DROP DATABASE agendafacil;
-CREATE DATABASE agendafacil;
-USE agendafacil;
-```
-
-## 🐛 Problemas Comuns
-
-| Problema | Solução |
-|----------|---------|
-| MySQL não conecta | Verifique se o MySQL está rodando e credenciais estão corretas |
-| Porta em uso | Mude a porta em `vite.config.js` (frontend) ou `index.js` (backend) |
-| Frontend não conecta ao backend | Confirme se o backend está rodando na porta correta |
-
-## 📱 Navegação
-
-- **Login** - Acesso ao sistema
-- **Cadastro** - Criar nova conta
-- **Agendamentos** - Ver serviços disponíveis
-- **Meus Agendamentos** - Histórico de agendamentos
-- **Barbeiro** - Painel do profissional
-- **Página Principal** - Dashboard
-- **Sobre Nós** - Informações
+**Observações de produção**
+- Nunca versionar credenciais: use as configurações de ambiente do Vercel e as informações de serviço fornecidas pela Aiven.
+- Em produção, aproveite os recursos gerenciados (backups e alta disponibilidade) que a Aiven oferece para o banco.
 
 ---
 
-**Desenvolvido com ❤️ para AgendaFácil**
+Desenvolvido com ❤️ para AgendaFácil
