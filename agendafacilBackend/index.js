@@ -332,15 +332,28 @@ sequelize
   .sync({ alter: true })
   .then(async () => {
     await Usuario.findOrCreate({
-      where: { email: 'barbeiro@ramon.com' },
+      where: { email: 'barbeiro@agendafacil.com' },
       defaults: {
-        nome: 'Ramon Barbearia',
-        email: 'barbeiro@ramon.com',
+        nome: 'Administrador Barbearia',
+        email: 'barbeiro@agendafacil.com',
         telefone: '(00) 00000-0000',
         cpf: '000.000.000-00',
         data_nascimento: '1980-01-01',
         senha: 'barbeiro123',
         role: 'barbeiro'
+      }
+    });
+
+    await Usuario.findOrCreate({
+      where: { email: 'cliente@agendafacil.com' },
+      defaults: {
+        nome: 'Cliente Teste',
+        email: 'cliente@agendafacil.com',
+        telefone: '(00) 00000-0000',
+        cpf: '111.111.111-11',
+        data_nascimento: '1990-01-01',
+        senha: 'cliente123',
+        role: 'cliente'
       }
     });
 
