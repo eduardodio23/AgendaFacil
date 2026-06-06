@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { baseUrl } from '../../api';
 import './style.css';
 
 export default function Login() {
@@ -28,7 +29,7 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/login', {
+      const response = await fetch(`${baseUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, senha: password })

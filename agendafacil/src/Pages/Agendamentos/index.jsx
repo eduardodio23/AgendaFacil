@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import './style.css';
 import { useAuth } from '../../contexts/AuthContext';
+import { baseUrl } from '../../api';
 
 const servicosDisponiveis = [
   { id: 1, nome: 'Corte Masculino', duracao: 30, preco: 25 },
@@ -115,7 +116,7 @@ export default function Agendamentos() {
 
     try {
       const selectedService = servicosDisponiveis.find((s) => s.id === parseInt(formData.servico, 10));
-      const response = await fetch('http://localhost:3000/agendamentos', {
+      const response = await fetch(`${baseUrl}/agendamentos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { baseUrl } from '../../api';
 import './style.css';
 
 function formatPhone(value) {
@@ -61,7 +62,7 @@ export default function Cadastro() {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/usuarios', {
+      const response = await fetch(`${baseUrl}/cadastro`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { baseUrl } from '../../api';
 import './style.css';
 
 const paymentMethods = [
@@ -24,7 +25,7 @@ export default function Barbeiro() {
   const loadAgendamentos = async () => {
     setLoadingAgenda(true);
     try {
-      const response = await fetch('http://localhost:3000/agendamentos/semana');
+      const response = await fetch(`${baseUrl}/agendamentos/semana`);
       if (!response.ok) {
         throw new Error('Não foi possível carregar os agendamentos');
       }
@@ -49,8 +50,8 @@ export default function Barbeiro() {
     setLoadingFinance(true);
     try {
       const [weekResponse, monthResponse] = await Promise.all([
-        fetch('http://localhost:3000/faturamento/semana'),
-        fetch('http://localhost:3000/faturamento/mes')
+        fetch(`${baseUrl}/faturamento/semana`),
+        fetch(`${baseUrl}/faturamento/mes`)
       ]);
       if (!weekResponse.ok || !monthResponse.ok) {
         throw new Error('Não foi possível carregar o faturamento');
@@ -73,7 +74,7 @@ export default function Barbeiro() {
 
   const handleCancel = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3000/agendamentos/${id}/cancel`, {
+      const response = await fetch(`${baseUrl}/agendamentos/${id}/cancel`, {
         method: 'PUT'
       });
       const data = await response.json();
@@ -106,7 +107,7 @@ export default function Barbeiro() {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/agendamentos/${id}/faturar`, {
+      const response = await fetch(`${baseUrl}/agendamentos/${id}/faturar`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

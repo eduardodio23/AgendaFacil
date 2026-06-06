@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { baseUrl } from '../../api';
 import './style.css';
 
 export default function PaginaPrincipal() {
@@ -14,7 +15,7 @@ export default function PaginaPrincipal() {
     async function load() {
       if (!user || isBarbeiro) return;
       try {
-        const response = await fetch(`http://localhost:3000/agendamentos/usuario/${user.id}`);
+        const response = await fetch(`${baseUrl}/agendamentos/usuario/${user.id}`);
         if (!response.ok) {
           throw new Error('Erro ao carregar seus agendamentos');
         }

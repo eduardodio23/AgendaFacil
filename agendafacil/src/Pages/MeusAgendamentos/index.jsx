@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { baseUrl } from '../../api';
 import './style.css';
 
 export default function MeusAgendamentos() {
@@ -11,7 +12,7 @@ export default function MeusAgendamentos() {
   useEffect(() => {
     async function loadAgendamentos() {
       try {
-        const response = await fetch(`http://localhost:3000/agendamentos/usuario/${user.id}`);
+        const response = await fetch(`${baseUrl}/agendamentos/usuario/${user.id}`);
         if (!response.ok) {
           throw new Error('Não foi possível carregar seus agendamentos');
         }
