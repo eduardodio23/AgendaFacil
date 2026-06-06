@@ -2,11 +2,29 @@ const express = require('express');
 const cors = require('cors');
 const { Sequelize, DataTypes, Op } = require('sequelize');
 
-const sequelize = new Sequelize('agendafacil', 'root', '', {
-  host: 'localhost',
-  password: '',
-  dialect: 'mysql'
-});
+const databaseUrl = process.env.DATABASE_URL;
+let sequelize;
+if (databaseUrl) {
+  // Detect dialect from DATABASE_URL (postgres or mysql). Prefer postgres.
+  const isPostgres = /^postgres(?:ql)?:\/\//i.test(databaseUrl);
+  sequelize = new Sequelize(databaseUrl, {
+    dialect: isPostgres ? 'postgres' : 'mysql',
+    dialectOptions: isPostgres
+      ? {
+          ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl) ? { require: true, rejectUnauthorized: false } : undefined
+        }
+      : {
+          ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl) ? { rejectUnauthorized: false } : undefined
+        },
+    logging: false
+  });
+} else {
+  // Local fallback: use Postgres local defaults
+  sequelize = new Sequelize('postgres://postgres:password@127.0.0.1:5432/agendafacil', {
+    dialect: 'postgres',
+    logging: false
+  });
+}
 
 const Usuario = sequelize.define('Usuario', {
   nome: {
@@ -92,7 +110,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.get('/usuarios', async (req, res) => {
   try {
