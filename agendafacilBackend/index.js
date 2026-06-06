@@ -4,7 +4,7 @@ const { Sequelize, DataTypes, Op } = require('sequelize');
 
 const sequelize = new Sequelize('agendafacil', 'root', '', {
   host: 'localhost',
-  password: '12345678',
+  password: '',
   dialect: 'mysql'
 });
 
