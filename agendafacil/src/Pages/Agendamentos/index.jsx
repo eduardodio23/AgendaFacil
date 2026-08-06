@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './style.css';
 import { useAuth } from '../../contexts/AuthContext';
 import { baseUrl } from '../../api';
@@ -37,7 +37,7 @@ const horariosDomingo = [
 
 function getHorariosDisponiveis(data) {
   if (!data) return horariosDiaUtil;
-  const dia = new Date(data).getDay();
+  const dia = new Date(`${data}T12:00:00`).getDay();
   if (dia === 6) return horariosSabado;
   if (dia === 0) return horariosDomingo;
   return horariosDiaUtil;
@@ -57,7 +57,6 @@ export default function Agendamentos() {
     profissional: '',
     data: '',
     horario: '',
-    nomeCliente: '',
     telefone: '',
     observacoes: ''
   });
@@ -65,20 +64,54 @@ export default function Agendamentos() {
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [extra, setExtra] = useState(false);
+  const [availability, setAvailability] = useState(null);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
 
   useEffect(() => {
     if (user) {
       setFormData((prev) => ({
         ...prev,
-        nomeCliente: user.nome || prev.nomeCliente,
         telefone: user.telefone || prev.telefone
       }));
     }
   }, [user]);
 
+  useEffect(() => {
+    const loadAvailability = async () => {
+      if (!formData.profissional || !formData.data) {
+        setAvailability(null);
+        return;
+      }
+
+      setLoadingAvailability(true);
+      try {
+        const response = await fetch(`${baseUrl}/agendamentos/disponibilidade?profissional=${encodeURIComponent(profissionaisDisponiveis.find((p) => String(p.id) === formData.profissional)?.nome || '')}&data=${formData.data}`);
+        if (!response.ok) {
+          throw new Error('Não foi possível carregar a disponibilidade');
+        }
+        const data = await response.json();
+        setAvailability(data);
+      } catch (err) {
+        setAvailability(null);
+      } finally {
+        setLoadingAvailability(false);
+      }
+    };
+
+    loadAvailability();
+  }, [formData.profissional, formData.data]);
+
+  const availableSlots = useMemo(() => {
+    if (!availability) {
+      return getHorariosDisponiveis(formData.data);
+    }
+
+    return availability.availableSlots;
+  }, [availability, formData.data]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     const formattedValue = name === 'telefone' ? formatPhone(value) : value;
 
     setFormData((prev) => {
@@ -127,7 +160,8 @@ export default function Agendamentos() {
           horario: formData.horario,
           telefone: formData.telefone,
           valor: selectedService?.preco || 0,
-          observacoes: formData.observacoes
+          observacoes: formData.observacoes,
+          extra
         })
       });
 
@@ -147,6 +181,7 @@ export default function Agendamentos() {
         observacoes: ''
       }));
       setServicoSelecionado(null);
+      setExtra(false);
     } catch (err) {
       setError('Erro de conexão com a API.');
     } finally {
@@ -158,7 +193,7 @@ export default function Agendamentos() {
     <div className="agendamentos-container">
       <div className="agendamentos-box">
         <h1>Agendamento</h1>
-        <p className="agendamentos-subtitle">Escolha o serviço, profissional e horário</p>
+        <p className="agendamentos-subtitle">Agende em poucos passos e acompanhe sua visita pelo celular.</p>
 
         <form onSubmit={handleSubmit} className="agendamentos-form">
           <div className="form-section">
@@ -236,29 +271,31 @@ export default function Agendamentos() {
                   required
                 >
                   <option value="">Selecione um horário</option>
-                  {getHorariosDisponiveis(formData.data).map((horario) => (
+                  {availableSlots.map((horario) => (
                     <option key={horario} value={horario}>{horario}</option>
                   ))}
                 </select>
               </div>
             </div>
+
+            {loadingAvailability ? (
+              <p className="helper-text">Buscando horários disponíveis...</p>
+            ) : availability ? (
+              <div className="availability-card">
+                <p>Horários livres: {availability.availableSlots.length}</p>
+                {availability.extraSlots.length > 0 && <p>Extras confirmados: {availability.extraSlots.join(', ')}</p>}
+              </div>
+            ) : null}
+
+            <label className="checkbox-card">
+              <input type="checkbox" checked={extra} onChange={() => setExtra((prev) => !prev)} />
+              <span>Quero registrar este atendimento como extra, mesmo que o horário esteja ocupado.</span>
+            </label>
           </div>
 
           <div className="form-section">
             <h2>Seus Dados</h2>
             <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="nomeCliente">Nome Completo</label>
-                <input
-                  type="text"
-                  id="nomeCliente"
-                  name="nomeCliente"
-                  value={formData.nomeCliente}
-                  onChange={handleChange}
-                  placeholder="Seu nome"
-                />
-              </div>
-
               <div className="form-group">
                 <label htmlFor="telefone">Telefone</label>
                 <input
@@ -294,6 +331,7 @@ export default function Agendamentos() {
               <p><strong>Valor:</strong> R$ {servicoSelecionado.preco},00</p>
               <p><strong>Data:</strong> {formData.data}</p>
               <p><strong>Horário:</strong> {formData.horario}</p>
+              <p><strong>Tipo:</strong> {extra ? 'Extra' : 'Confirmado'}</p>
             </div>
           )}
 

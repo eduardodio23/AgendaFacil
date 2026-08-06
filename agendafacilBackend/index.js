@@ -1,25 +1,29 @@
 const express = require('express');
 const cors = require('cors');
 const { Sequelize, DataTypes, Op } = require('sequelize');
+const { buildAvailability } = require('./bookingLogic');
 
 const databaseUrl = process.env.DATABASE_URL;
 let sequelize;
+
 if (databaseUrl) {
-  // Detect dialect from DATABASE_URL (postgres or mysql). Prefer postgres.
   const isPostgres = /^postgres(?:ql)?:\/\//i.test(databaseUrl);
   sequelize = new Sequelize(databaseUrl, {
     dialect: isPostgres ? 'postgres' : 'mysql',
     dialectOptions: isPostgres
       ? {
-          ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl) ? { require: true, rejectUnauthorized: false } : undefined
+          ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl)
+            ? { require: true, rejectUnauthorized: false }
+            : undefined
         }
       : {
-          ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl) ? { rejectUnauthorized: false } : undefined
+          ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl)
+            ? { rejectUnauthorized: false }
+            : undefined
         },
     logging: false
   });
 } else {
-  // Local fallback: use Postgres local defaults
   sequelize = new Sequelize('postgres://postgres:password@127.0.0.1:5432/agendafacil', {
     dialect: 'postgres',
     logging: false
@@ -100,6 +104,14 @@ const Agendamento = sequelize.define('Agendamento', {
   canceled: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  extra: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  status: {
+    type: DataTypes.STRING,
+    defaultValue: 'agendado'
   }
 });
 
@@ -111,6 +123,13 @@ app.use(cors());
 app.use(express.json());
 
 const port = process.env.PORT || 3000;
+
+function serializeAgendamento(agendamento) {
+  return {
+    ...agendamento.toJSON(),
+    status: agendamento.canceled ? 'cancelado' : agendamento.status || 'agendado'
+  };
+}
 
 app.get('/usuarios', async (req, res) => {
   try {
@@ -189,7 +208,7 @@ app.get('/agendamentos', async (req, res) => {
       include: [{ model: Usuario, attributes: ['id', 'nome', 'email', 'telefone'] }],
       order: [['data', 'ASC'], ['horario', 'ASC']]
     });
-    res.json(agendamentos);
+    res.json(agendamentos.map(serializeAgendamento));
   } catch (error) {
     res.status(500).json({ message: 'Erro ao buscar agendamentos' });
   }
@@ -210,7 +229,7 @@ app.get('/agendamentos/semana', async (req, res) => {
       include: [{ model: Usuario, attributes: ['id', 'nome', 'email', 'telefone'] }],
       order: [['data', 'ASC'], ['horario', 'ASC']]
     });
-    res.json(agendamentosDaSemana);
+    res.json(agendamentosDaSemana.map(serializeAgendamento));
   } catch (error) {
     res.status(500).json({ message: 'Erro ao buscar agendamentos da semana' });
   }
@@ -223,15 +242,49 @@ app.get('/agendamentos/usuario/:usuarioId', async (req, res) => {
       where: { usuarioId },
       order: [['data', 'ASC'], ['horario', 'ASC']]
     });
-    res.json(agendamentos);
+    res.json(agendamentos.map(serializeAgendamento));
   } catch (error) {
     res.status(500).json({ message: 'Erro ao buscar agendamentos do usuário' });
   }
 });
 
+app.get('/agendamentos/disponibilidade', async (req, res) => {
+  try {
+    const { profissional, data } = req.query;
+
+    if (!profissional || !data) {
+      return res.status(400).json({ message: 'Profissional e data são obrigatórios' });
+    }
+
+    const agendamentos = await Agendamento.findAll({
+      where: {
+        profissional,
+        data,
+        canceled: false
+      },
+      order: [['horario', 'ASC']]
+    });
+
+    res.json(buildAvailability(data, profissional, agendamentos));
+  } catch (error) {
+    console.error('Erro ao buscar disponibilidade:', error);
+    res.status(500).json({ message: 'Erro ao buscar disponibilidade' });
+  }
+});
+
 app.post('/agendamentos', async (req, res) => {
   try {
-    const { usuarioId, servico, profissional, data, horario, telefone, valor, observacoes } = req.body;
+    const {
+      usuarioId,
+      servico,
+      profissional,
+      data,
+      horario,
+      telefone,
+      valor,
+      observacoes,
+      extra = false
+    } = req.body;
 
     if (!usuarioId || !servico || !profissional || !data || !horario || !telefone || valor == null) {
       return res.status(400).json({ message: 'Campos obrigatórios faltando' });
@@ -240,6 +293,24 @@ app.post('/agendamentos', async (req, res) => {
     const usuario = await Usuario.findByPk(usuarioId);
     if (!usuario) {
       return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    const agendamentosNoHorario = await Agendamento.findAll({
+      where: {
+        profissional,
+        data,
+        horario,
+        canceled: false
+      }
+    });
+
+    const conflito = agendamentosNoHorario.some((item) => !item.extra && !extra);
+
+    if (conflito) {
+      return res.status(409).json({
+        message: 'Já existe um agendamento confirmado para este profissional neste horário. Você pode marcar como extra se quiser.',
+        conflict: true
+      });
     }
 
     const novoAgendamento = await Agendamento.create({
@@ -252,13 +323,45 @@ app.post('/agendamentos', async (req, res) => {
       valor,
       observacoes: observacoes || '',
       canceled: false,
-      faturado: false
+      faturado: false,
+      extra,
+      status: extra ? 'extra' : 'agendado'
     });
 
-    res.status(201).json({ message: 'Agendamento criado com sucesso', agendamento: novoAgendamento });
+    res.status(201).json({ message: 'Agendamento criado com sucesso', agendamento: serializeAgendamento(novoAgendamento) });
   } catch (error) {
     console.error('Erro ao criar agendamento:', error);
     res.status(500).json({ message: 'Erro ao criar agendamento' });
+  }
+});
+
+app.put('/agendamentos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { servico, profissional, data, horario, telefone, valor, observacoes } = req.body;
+
+    const agendamento = await Agendamento.findByPk(id);
+    if (!agendamento) {
+      return res.status(404).json({ message: 'Agendamento não encontrado' });
+    }
+
+    if (agendamento.canceled) {
+      return res.status(400).json({ message: 'Não é possível editar um agendamento cancelado' });
+    }
+
+    if (servico) agendamento.servico = servico;
+    if (profissional) agendamento.profissional = profissional;
+    if (data) agendamento.data = data;
+    if (horario) agendamento.horario = horario;
+    if (telefone) agendamento.telefone = telefone;
+    if (valor != null) agendamento.valor = valor;
+    if (observacoes != null) agendamento.observacoes = observacoes;
+
+    await agendamento.save();
+    res.json({ message: 'Agendamento atualizado com sucesso', agendamento: serializeAgendamento(agendamento) });
+  } catch (error) {
+    console.error('Erro ao atualizar agendamento:', error);
+    res.status(500).json({ message: 'Erro ao atualizar agendamento' });
   }
 });
 
@@ -270,8 +373,9 @@ app.put('/agendamentos/:id/cancel', async (req, res) => {
       return res.status(404).json({ message: 'Agendamento não encontrado' });
     }
     agendamento.canceled = true;
+    agendamento.status = 'cancelado';
     await agendamento.save();
-    res.json({ message: 'Agendamento cancelado com sucesso', agendamento });
+    res.json({ message: 'Agendamento cancelado com sucesso', agendamento: serializeAgendamento(agendamento) });
   } catch (error) {
     console.error('Erro ao cancelar agendamento:', error);
     res.status(500).json({ message: 'Erro ao cancelar agendamento' });
@@ -293,7 +397,7 @@ app.put('/agendamentos/:id/faturar', async (req, res) => {
     agendamento.valor = valor;
     agendamento.forma_pagamento = forma_pagamento;
     await agendamento.save();
-    res.json({ message: 'Agendamento faturado com sucesso', agendamento });
+    res.json({ message: 'Agendamento faturado com sucesso', agendamento: serializeAgendamento(agendamento) });
   } catch (error) {
     console.error('Erro ao faturar agendamento:', error);
     res.status(500).json({ message: 'Erro ao faturar agendamento' });
