@@ -11,7 +11,11 @@
     "start": "node index.js",
     "dev": "node index.js"
   },
-  "keywords": ["agenda", "barbeiro", "agendamento"],
+  "keywords": [
+    "agenda",
+    "barbeiro",
+    "agendamento"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
