@@ -64,36 +64,19 @@ let sequelize;
 
 if (databaseUrl) {
   const isPostgres = /^postgres(?:ql)?:\/\//i.test(databaseUrl);
-  const isSQLite = /^sqlite:/i.test(databaseUrl);
   
-  if (isSQLite) {
-    // SQLite
-    const dbPath = databaseUrl.replace('sqlite:', '');
-    sequelize = new Sequelize({
-      dialect: 'sqlite',
-      storage: dbPath,
-      logging: false
-    });
-  } else {
-    sequelize = new Sequelize(databaseUrl, {
-      dialect: isPostgres ? 'postgres' : 'mysql',
-      dialectOptions: isPostgres
-        ? {
-            ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl)
-              ? { require: true, rejectUnauthorized: false }
-              : undefined
-          }
-        : {
-            ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl)
-              ? { rejectUnauthorized: false }
-              : undefined
-          },
-      logging: false
-    });
-  }
+  sequelize = new Sequelize(databaseUrl, {
+    dialect: 'postgres',
+    dialectOptions: {
+      ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl)
+        ? { require: true, rejectUnauthorized: false }
+        : undefined
+    },
+    logging: false
+  });
 } else {
-  console.error('❌ DATABASE_URL não configurada. Por favor, crie um arquivo .env com a configuração do banco de dados.');
-  console.error('Exemplo para SQLite: DATABASE_URL=sqlite:./agendafacil.db');
+  console.error('❌ DATABASE_URL não configurada no ambiente.');
+  console.error('Railway gera automaticamente. Verifique as "Variables".');
   process.exit(1);
 }
 
