@@ -59,12 +59,14 @@ async function sendEmail(to, subject, html) {
   }
 }
 
-const databaseUrl = process.env.DATABASE_URL;
+// Tentar múltiplas variáveis que Railway pode usar
+const databaseUrl = process.env.DATABASE_URL || 
+                    process.env.POSTGRES_URL || 
+                    process.env.DB_URL;
+
 let sequelize;
 
-if (databaseUrl) {
-  const isPostgres = /^postgres(?:ql)?:\/\//i.test(databaseUrl);
-  
+if (databaseUrl && databaseUrl.includes('postgres')) {
   sequelize = new Sequelize(databaseUrl, {
     dialect: 'postgres',
     dialectOptions: {
@@ -74,9 +76,11 @@ if (databaseUrl) {
     },
     logging: false
   });
+  console.log('✅ Conectado ao PostgreSQL');
 } else {
-  console.error('❌ DATABASE_URL não configurada no ambiente.');
-  console.error('Railway gera automaticamente. Verifique as "Variables".');
+  console.error('❌ DATABASE_URL não encontrada!');
+  console.error('Variáveis disponíveis:', Object.keys(process.env).filter(k => k.includes('DB') || k.includes('POST')));
+  console.error('Por favor, configure PostgreSQL no Railway e adicione DATABASE_URL nas Variables');
   process.exit(1);
 }
 
