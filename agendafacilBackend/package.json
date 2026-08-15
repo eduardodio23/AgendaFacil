@@ -4,10 +4,21 @@
   },
   "dependencies": {
     "cors": "^2.8.6",
+    "dotenv": "^16.0.3",
     "express": "^5.2.1",
-    "mysql2": "^3.2.5",
+    "mysql2": "^3.23.3",
+    "nodemailer": "^6.9.0",
     "pg": "^8.11.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.8"
-  }
+    "sequelize": "^6.37.8",
+    "sqlite3": "^6.0.1"
+  },
+  "name": "agendafacilbackend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
 }

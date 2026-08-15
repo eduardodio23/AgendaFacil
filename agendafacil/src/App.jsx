@@ -8,6 +8,8 @@ import Cadastro from './Pages/Cadastro';
 import Sobrenos from './Pages/Sobrenos';
 import Login from './Pages/Login';
 import Barbeiro from './Pages/Barbeiro';
+import EsqueciSenha from './Pages/EsqueciSenha';
+import ResetSenha from './Pages/ResetSenha';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 import './App.css';
@@ -22,6 +24,8 @@ function App() {
             <Route path="/" element={<Navigate replace to="/login" />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
+            <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+            <Route path="/reset-senha/:token" element={<ResetSenha />} />
             <Route
               path="/paginaprincipal"
               element={

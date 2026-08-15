@@ -3,6 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { baseUrl } from '../../api';
 import './style.css';
 
+// Lista de domínios de email permitidos
+const ALLOWED_EMAIL_DOMAINS = [
+  'gmail.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'yahoo.com',
+  'mail.com', 'protonmail.com', 'aol.com', 'terra.com.br', 'uol.com.br',
+  'ig.com.br', 'globo.com', 'live.com', 'msn.com', 'ymail.com'
+];
+
 function formatPhone(value) {
   const digits = value.replace(/\D/g, '').slice(0, 11);
   return digits
@@ -16,6 +23,18 @@ function formatCPF(value) {
     .replace(/^(\d{3})(\d)/, '$1.$2')
     .replace(/(\d{3})(\d)/, '$1.$2')
     .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+}
+
+function isValidEmail(email) {
+  const domain = email.split('@')[1]?.toLowerCase();
+  return domain && ALLOWED_EMAIL_DOMAINS.includes(domain);
+}
+
+function isValidMonth(dateString) {
+  if (!dateString) return true;
+  const date = new Date(dateString);
+  const month = date.getMonth() + 1;
+  return month <= 12;
 }
 
 export default function Cadastro() {
@@ -55,8 +74,26 @@ export default function Cadastro() {
     e.preventDefault();
     setError('');
 
+    // Validações no frontend
     if (formData.senha !== formData.confirmarSenha) {
       setError('As senhas não coincidem.');
+      return;
+    }
+
+    if (formData.senha.length < 6) {
+      setError('Senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+
+    // Validar email
+    if (formData.email && !isValidEmail(formData.email)) {
+      setError('Por favor, use um email de uma empresa conhecida (Gmail, Hotmail, Outlook, iCloud, Yahoo, etc.)');
+      return;
+    }
+
+    // Validar mês
+    if (formData.dataNascimento && !isValidMonth(formData.dataNascimento)) {
+      setError('Data de nascimento inválida.');
       return;
     }
 

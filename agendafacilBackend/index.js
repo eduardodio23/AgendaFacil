@@ -1,33 +1,100 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 const { Sequelize, DataTypes, Op } = require('sequelize');
 const { buildAvailability } = require('./bookingLogic');
+
+// Configuração de email
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: process.env.SMTP_PORT || 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || ''
+  }
+});
+
+// Lista de domínios de email permitidos (empresas conhecidas)
+const allowedEmailDomains = [
+  'gmail.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'yahoo.com',
+  'mail.com', 'protonmail.com', 'aol.com', 'terra.com.br', 'uol.com.br',
+  'ig.com.br', 'globo.com', 'live.com', 'msn.com', 'ymail.com'
+];
+
+// Função para validar email
+function isValidEmail(email) {
+  const domain = email.split('@')[1]?.toLowerCase();
+  return domain && allowedEmailDomains.includes(domain);
+}
+
+// Função para validar mês (não pode ultrapassar 12)
+function isValidMonth(dateString) {
+  if (!dateString) return true;
+  const date = new Date(dateString);
+  const month = date.getMonth() + 1;
+  return month <= 12;
+}
+
+// Função para enviar email
+async function sendEmail(to, subject, html) {
+  if (!process.env.SMTP_USER) {
+    console.warn('⚠️ SMTP não configurado. Email não será enviado.');
+    return false;
+  }
+  
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to,
+      subject,
+      html
+    });
+    return true;
+  } catch (error) {
+    console.error('Erro ao enviar email:', error);
+    return false;
+  }
+}
 
 const databaseUrl = process.env.DATABASE_URL;
 let sequelize;
 
 if (databaseUrl) {
   const isPostgres = /^postgres(?:ql)?:\/\//i.test(databaseUrl);
-  sequelize = new Sequelize(databaseUrl, {
-    dialect: isPostgres ? 'postgres' : 'mysql',
-    dialectOptions: isPostgres
-      ? {
-          ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl)
-            ? { require: true, rejectUnauthorized: false }
-            : undefined
-        }
-      : {
-          ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl)
-            ? { rejectUnauthorized: false }
-            : undefined
-        },
-    logging: false
-  });
+  const isSQLite = /^sqlite:/i.test(databaseUrl);
+  
+  if (isSQLite) {
+    // SQLite
+    const dbPath = databaseUrl.replace('sqlite:', '');
+    sequelize = new Sequelize({
+      dialect: 'sqlite',
+      storage: dbPath,
+      logging: false
+    });
+  } else {
+    sequelize = new Sequelize(databaseUrl, {
+      dialect: isPostgres ? 'postgres' : 'mysql',
+      dialectOptions: isPostgres
+        ? {
+            ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl)
+              ? { require: true, rejectUnauthorized: false }
+              : undefined
+          }
+        : {
+            ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl)
+              ? { rejectUnauthorized: false }
+              : undefined
+          },
+      logging: false
+    });
+  }
 } else {
-  sequelize = new Sequelize('postgres://postgres:password@127.0.0.1:5432/agendafacil', {
-    dialect: 'postgres',
-    logging: false
-  });
+  console.error('❌ DATABASE_URL não configurada. Por favor, crie um arquivo .env com a configuração do banco de dados.');
+  console.error('Exemplo para SQLite: DATABASE_URL=sqlite:./agendafacil.db');
+  process.exit(1);
 }
 
 const Usuario = sequelize.define('Usuario', {
@@ -60,6 +127,14 @@ const Usuario = sequelize.define('Usuario', {
     type: DataTypes.STRING,
     allowNull: false,
     defaultValue: 'cliente'
+  },
+  reset_token: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  reset_token_expiry: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 });
 
@@ -175,6 +250,59 @@ app.post('/usuarios', async (req, res) => {
   }
 });
 
+// Endpoint para cadastro com validações
+app.post('/cadastro', async (req, res) => {
+  try {
+    const { nome, email, telefone, cpf, data_nascimento, senha } = req.body;
+    
+    // Validações
+    if (!nome || !email || !telefone || !cpf || !data_nascimento || !senha) {
+      return res.status(400).json({ message: 'Todos os campos obrigatórios devem ser preenchidos' });
+    }
+
+    // Validar email (apenas empresas conhecidas)
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Por favor, use um email de uma empresa conhecida (Gmail, Hotmail, Outlook, iCloud, Yahoo, etc.)' });
+    }
+
+    // Validar mês de nascimento
+    if (!isValidMonth(data_nascimento)) {
+      return res.status(400).json({ message: 'Data de nascimento inválida' });
+    }
+
+    // Validar comprimento mínimo de senha
+    if (senha.length < 6) {
+      return res.status(400).json({ message: 'Senha deve ter no mínimo 6 caracteres' });
+    }
+
+    const novoUsuario = await Usuario.create({
+      nome,
+      email,
+      telefone,
+      cpf,
+      data_nascimento,
+      senha,
+      role: 'cliente'
+    });
+
+    const usuarioSeguranca = {
+      id: novoUsuario.id,
+      nome: novoUsuario.nome,
+      email: novoUsuario.email,
+      role: novoUsuario.role,
+      telefone: novoUsuario.telefone
+    };
+
+    res.status(201).json({ message: 'Cadastro realizado com sucesso!', usuario: usuarioSeguranca });
+  } catch (error) {
+    console.error('Erro ao cadastrar usuário:', error);
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({ message: 'Este email já está cadastrado. Por favor, use outro email.' });
+    }
+    res.status(500).json({ message: 'Erro ao cadastrar usuário' });
+  }
+});
+
 app.post('/login', async (req, res) => {
   try {
     const { email, senha } = req.body;
@@ -199,6 +327,122 @@ app.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Erro ao processar login:', error);
     res.status(500).json({ message: 'Erro interno no login' });
+  }
+});
+
+// Endpoint para solicitar reset de senha
+app.post('/esqueci-senha', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email é obrigatório' });
+    }
+
+    const usuario = await Usuario.findOne({ where: { email } });
+    if (!usuario) {
+      // Por segurança, não informamos se o email existe ou não
+      return res.status(200).json({ message: 'Se o email existe em nossa base de dados, você receberá um link para resetar sua senha.' });
+    }
+
+    // Gerar token de reset
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 1000 * 60 * 60); // 1 hora
+
+    usuario.reset_token = resetToken;
+    usuario.reset_token_expiry = resetTokenExpiry;
+    await usuario.save();
+
+    // Enviar email com link de reset
+    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-senha/${resetToken}`;
+    const htmlContent = `
+      <h2>Resetar sua senha</h2>
+      <p>Olá ${usuario.nome},</p>
+      <p>Você solicitou um reset de senha. Clique no link abaixo para criar uma nova senha:</p>
+      <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Resetar Senha</a>
+      <p>Este link expira em 1 hora.</p>
+      <p>Se você não solicitou isto, ignore este email.</p>
+      <p>Atenciosamente,<br>Equipe AgendaFácil</p>
+    `;
+
+    const emailSent = await sendEmail(email, 'Reset de Senha - AgendaFácil', htmlContent);
+    
+    if (!emailSent) {
+      console.warn('⚠️ Email não foi enviado, mas token foi gerado');
+    }
+
+    res.status(200).json({ message: 'Se o email existe em nossa base de dados, você receberá um link para resetar sua senha.' });
+  } catch (error) {
+    console.error('Erro ao processar esqueci senha:', error);
+    res.status(500).json({ message: 'Erro ao processar solicitação' });
+  }
+});
+
+// Endpoint para validar token de reset
+app.get('/validar-reset-token/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    const usuario = await Usuario.findOne({
+      where: {
+        reset_token: token,
+        reset_token_expiry: {
+          [Op.gt]: new Date()
+        }
+      }
+    });
+
+    if (!usuario) {
+      return res.status(400).json({ message: 'Token inválido ou expirado' });
+    }
+
+    res.json({ message: 'Token válido', email: usuario.email });
+  } catch (error) {
+    console.error('Erro ao validar token:', error);
+    res.status(500).json({ message: 'Erro ao validar token' });
+  }
+});
+
+// Endpoint para resetar senha
+app.post('/resetar-senha', async (req, res) => {
+  try {
+    const { token, novaSenha, confirmarSenha } = req.body;
+
+    if (!token || !novaSenha || !confirmarSenha) {
+      return res.status(400).json({ message: 'Token e nova senha são obrigatórios' });
+    }
+
+    if (novaSenha !== confirmarSenha) {
+      return res.status(400).json({ message: 'As senhas não coincidem' });
+    }
+
+    if (novaSenha.length < 6) {
+      return res.status(400).json({ message: 'Senha deve ter no mínimo 6 caracteres' });
+    }
+
+    const usuario = await Usuario.findOne({
+      where: {
+        reset_token: token,
+        reset_token_expiry: {
+          [Op.gt]: new Date()
+        }
+      }
+    });
+
+    if (!usuario) {
+      return res.status(400).json({ message: 'Token inválido ou expirado' });
+    }
+
+    // Atualizar senha
+    usuario.senha = novaSenha;
+    usuario.reset_token = null;
+    usuario.reset_token_expiry = null;
+    await usuario.save();
+
+    res.json({ message: 'Senha alterada com sucesso' });
+  } catch (error) {
+    console.error('Erro ao resetar senha:', error);
+    res.status(500).json({ message: 'Erro ao resetar senha' });
   }
 });
 
