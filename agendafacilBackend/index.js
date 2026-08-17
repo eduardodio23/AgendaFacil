@@ -59,30 +59,47 @@ async function sendEmail(to, subject, html) {
   }
 }
 
-// Tentar múltiplas variáveis que Railway pode usar
-const databaseUrl = process.env.DATABASE_URL || 
-                    process.env.POSTGRES_URL || 
-                    process.env.DB_URL;
+// Tentar múltiplas variáveis que Railway ou outros provedores podem usar
+const databaseUrl = process.env.DATABASE_URL ||
+                    process.env.POSTGRES_URL ||
+                    process.env.DB_URL ||
+                    process.env.RAILWAY_DATABASE_URL ||
+                    process.env.PG_CONNECTION_STRING ||
+                    process.env.PG_URI ||
+                    process.env.POSTGRESQL_URL ||
+                    process.env.DATABASE;
 
 let sequelize;
 
-if (databaseUrl && databaseUrl.includes('postgres')) {
-  sequelize = new Sequelize(databaseUrl, {
-    dialect: 'postgres',
-    dialectOptions: {
-      ssl: process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/.test(databaseUrl)
-        ? { require: true, rejectUnauthorized: false }
-        : undefined
-    },
-    logging: false
-  });
-  console.log('✅ Conectado ao PostgreSQL');
-} else {
+if (!databaseUrl) {
   console.error('❌ DATABASE_URL não encontrada!');
-  console.error('Variáveis disponíveis:', Object.keys(process.env).filter(k => k.includes('DB') || k.includes('POST')));
+  console.error('Variáveis disponíveis:', Object.keys(process.env).filter(k => /DB|POST|PG|DATABASE/i.test(k)));
   console.error('Por favor, configure PostgreSQL no Railway e adicione DATABASE_URL nas Variables');
   process.exit(1);
 }
+
+// Detectar dialect a partir da URL
+let dialect = 'postgres';
+if (/mysql:\/\//i.test(databaseUrl)) dialect = 'mysql';
+else if (/postgres(?:ql)?:\/\//i.test(databaseUrl)) dialect = 'postgres';
+
+const sequelizeOptions = {
+  dialect,
+  logging: false
+};
+
+// Configurar SSL apenas para Postgres quando necessário
+if (dialect === 'postgres') {
+  const useSsl = process.env.DB_SSL === 'true' || /ssl-mode=REQUIRED/i.test(databaseUrl) || process.env.NODE_ENV === 'production';
+  if (useSsl) {
+    sequelizeOptions.dialectOptions = {
+      ssl: { require: true, rejectUnauthorized: false }
+    };
+  }
+}
+
+sequelize = new Sequelize(databaseUrl, sequelizeOptions);
+console.log(`✅ Conectado ao banco (${dialect})`);
 
 const Usuario = sequelize.define('Usuario', {
   nome: {
